@@ -1,7 +1,9 @@
 """
-Linear decay in reconstruction error when using restarted stacked NESTA.
+Compare the performance of stacked NESTA with and without restarts, under a 
+fixed iteration budget.
 
-Here NESTA is solving a Fourier imaging problem via TV minimization.
+The comparison is made for solving a Fourier imaging problem via TV 
+minimization.
 """
 import math
 import nestanet.operators as n_op
@@ -30,12 +32,15 @@ with Image.open(demos_path / "images/GPLU_phantom_512.png") as im:
 ### parameters
 
 # fixed parameters
-eta = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6]  # noise level
-sample_rate = 0.125 # sample rate
-outer_iters = 20    # num of restarts + 1
-r = math.exp(-1)    # decay factor
+eta = 1e-7          # noise level
+sample_rate = 0.15  # sample rate
+outer_iters = 200   # num of restarts + 1
+r = math.exp(-1)    # decay factor 
 zeta = 1e-9         # CS error parameter
 delta = 2e-4        # rNSP parameter
+
+# smoothing parameter for NESTA (without restarts)
+nesta_mu = 10**np.arange(-3,-8,-1, dtype=float) 
 
 # inferred parameters (mu and inner_iters are defined later)
 eps0 = np.linalg.norm(X,'fro')
@@ -78,18 +83,37 @@ L_W = 2*math.sqrt(2)
 c_B = N*N/m
 
 
-### reconstruct image using restarted NESTA for each eta value
+### define the inverse problem
 
-# create variables that are only need to be created once
 X_vec_t = torch.from_numpy(np.reshape(X,N*N))
 X_vec_t = X_vec_t.to(device_g)
+
+noise1 = torch.randn(m_exact) + 1j*torch.rand(m_exact)
+noise2 = torch.randn(m_exact) + 1j*torch.rand(m_exact)
+
+e1 = eta * noise1 / (math.sqrt(2) * torch.linalg.norm(noise1,2))
+e2 = eta * noise2 / (math.sqrt(2) * torch.linalg.norm(noise2,2))
+
+e1 = e1.to(device_g)
+e2 = e2.to(device_g)
+
+y1 = B(X_vec_t,1) + e1
+y2 = B(X_vec_t,1) + e2
+
+
+### compute restarted NESTA solution
 
 norm_fro_X = np.linalg.norm(X,'fro')
 print('Frobenius norm of X:', norm_fro_X)
 
 inner_iters = math.ceil(math.sqrt(2)/(r*N*delta))-1
+total_iters = outer_iters*(inner_iters+1)-1
 print('Inner iterations:', inner_iters+1)
+print('Total iterations:', total_iters+1)
 
+z0 = torch.zeros(N*N,dtype=X_vec_t.dtype)
+z0 = z0.to(device_g)
+    
 mu = []
 eps = eps0
 for k in range(outer_iters):
@@ -102,41 +126,24 @@ eval_fns = {
 
 l2_errs_dict = {}
 
-for noise_level in eta:
-    
-    ### define the inverse problem
+# compute restarted NESTA solution and compute relative error of iterates
+_, re_ev_values = n_nn.restarted_nesta_stacked(
+    y1, y2, z0, B, W, c_B, L_W, 
+    inner_iters, outer_iters, eta, mu, eval_fns)
 
-    noise1 = torch.randn(m_exact) + 1j*torch.rand(m_exact)
-    noise2 = torch.randn(m_exact) + 1j*torch.rand(m_exact)
-    
-    e1 = noise_level * noise1 / (math.sqrt(2) * torch.linalg.norm(noise1,2))
-    e2 = noise_level * noise2 / (math.sqrt(2) * torch.linalg.norm(noise2,2))
+r_errs = [val for rvals in re_ev_values['l2_err'] for val in rvals]
+l2_errs_dict['restarts'] = torch.as_tensor(r_errs).numpy()
 
-    e1 = e1.to(device_g)
-    e2 = e2.to(device_g)
+# compute NESTA solutions and relative error of iterates
+for n_mu in nesta_mu:
+    _, n_ev_values = n_nn.nesta_stacked(
+        y1, y2, z0, B, W, c_B, L_W,
+        total_iters, eta, n_mu, eval_fns)
 
-    y1 = B(X_vec_t,1) + e1
-    y2 = B(X_vec_t,1) + e2
-    
-    
-    ### compute restarted NESTA solution
-    
-    z0 = torch.zeros(N*N,dtype=X_vec_t.dtype)
-    z0 = z0.to(device_g)
-
-    _, re_ev_values = n_nn.restarted_nesta_stacked(
-        y1, y2, z0, B, W, c_B, L_W, 
-        inner_iters, outer_iters, noise_level, mu, eval_fns)
-
-
-    ### extract restart values
-    
-    errs = [res[-1] for res in re_ev_values['l2_err']]
-    
-    noise_level_str = "{:.0e}".format(noise_level)
-    l2_errs_dict[noise_level_str] = torch.as_tensor(errs).numpy()
-
+    n_errs = [val for val in n_ev_values['l2_err']]
+    n_mu_str = "{:.0e}".format(n_mu)
+    l2_errs_dict[n_mu_str] = torch.as_tensor(n_errs).numpy()
 
 ### save results
 
-np.savez(results_dir / 'restarts-results.npz', **l2_errs_dict)
+np.savez(results_dir / 'compare_without_restarts-results.npz', **l2_errs_dict)

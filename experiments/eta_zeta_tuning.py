@@ -1,5 +1,6 @@
 """
-Linear decay in reconstruction error when using restarted stacked NESTA.
+Compares the effect of setting noise level (eta) and compressed sensing error
+estimate (zeta) when reconstructing an image using restarted NESTA.
 
 Here NESTA is solving a Fourier imaging problem via TV minimization.
 """
@@ -29,12 +30,14 @@ with Image.open(demos_path / "images/GPLU_phantom_512.png") as im:
 
 ### parameters
 
+# grid parameters
+eta = 10**(np.arange(0,-9,-1,dtype=float))  # noise level
+zeta = 10**(np.arange(0,-9,-1,dtype=float)) # CS error parameter
+
 # fixed parameters
-eta = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6]  # noise level
-sample_rate = 0.125 # sample rate
-outer_iters = 20    # num of restarts + 1
+sample_rate = 0.25  # sample rate
+outer_iters = 50    # num of restarts + 1
 r = math.exp(-1)    # decay factor
-zeta = 1e-9         # CS error parameter
 delta = 2e-4        # rNSP parameter
 
 # inferred parameters (mu and inner_iters are defined later)
@@ -81,8 +84,12 @@ c_B = N*N/m
 ### reconstruct image using restarted NESTA for each eta value
 
 # create variables that are only need to be created once
+
 X_vec_t = torch.from_numpy(np.reshape(X,N*N))
 X_vec_t = X_vec_t.to(device_g)
+
+y = B(X_vec_t,1)
+y = y.to(device_g)
 
 norm_fro_X = np.linalg.norm(X,'fro')
 print('Frobenius norm of X:', norm_fro_X)
@@ -90,53 +97,40 @@ print('Frobenius norm of X:', norm_fro_X)
 inner_iters = math.ceil(math.sqrt(2)/(r*N*delta))-1
 print('Inner iterations:', inner_iters+1)
 
-mu = []
-eps = eps0
-for k in range(outer_iters):
-    mu.append(r*delta*eps)
-    eps = r*eps + zeta
+z0 = torch.zeros(N*N,dtype=X_vec_t.dtype)
+z0 = z0.to(device_g)
 
+eta_grid, zeta_grid = np.meshgrid(eta, zeta, indexing='ij')
+
+# =======!$@*!@_)$&!@_NV$! DEBUG =========================================================
 eval_fns = {
     'l2_err' : lambda x : torch.linalg.norm(X_vec_t - x,2),
 }
 
-l2_errs_dict = {}
+l2_errs = np.zeros(eta_grid.shape, dtype=float)
 
-for noise_level in eta:
-    
-    ### define the inverse problem
+for i in range(len(eta)):
+    for j in range(len(zeta)):
+        print('(i,j) =', (i,j))
+        eta_val, zeta_val = eta_grid[i,j], zeta_grid[i,j]
 
-    noise1 = torch.randn(m_exact) + 1j*torch.rand(m_exact)
-    noise2 = torch.randn(m_exact) + 1j*torch.rand(m_exact)
-    
-    e1 = noise_level * noise1 / (math.sqrt(2) * torch.linalg.norm(noise1,2))
-    e2 = noise_level * noise2 / (math.sqrt(2) * torch.linalg.norm(noise2,2))
+        
+        ### compute restarted NESTA solution
+        
+        mu = []
+        eps = eps0
+        for k in range(outer_iters):
+            mu.append(r*delta*eps)
+            eps = r*eps + zeta_val
 
-    e1 = e1.to(device_g)
-    e2 = e2.to(device_g)
+        X_rec_t, _ = n_nn.restarted_nesta_stacked(
+                y, y, z0, B, W, c_B, L_W,
+                inner_iters, outer_iters,
+                eta_val, mu)
 
-    y1 = B(X_vec_t,1) + e1
-    y2 = B(X_vec_t,1) + e2
-    
-    
-    ### compute restarted NESTA solution
-    
-    z0 = torch.zeros(N*N,dtype=X_vec_t.dtype)
-    z0 = z0.to(device_g)
-
-    _, re_ev_values = n_nn.restarted_nesta_stacked(
-        y1, y2, z0, B, W, c_B, L_W, 
-        inner_iters, outer_iters, noise_level, mu, eval_fns)
-
-
-    ### extract restart values
-    
-    errs = [res[-1] for res in re_ev_values['l2_err']]
-    
-    noise_level_str = "{:.0e}".format(noise_level)
-    l2_errs_dict[noise_level_str] = torch.as_tensor(errs).numpy()
-
+        err = torch.linalg.norm(X_vec_t-X_rec_t,2).cpu()
+        l2_errs[i,j] = float(err)
 
 ### save results
 
-np.savez(results_dir / 'restarts-results.npz', **l2_errs_dict)
+np.savez(results_dir / 'eta_zeta_tuning-results.npz', eta=eta, zeta=zeta, errs=l2_errs)
