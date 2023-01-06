@@ -5,7 +5,7 @@
 #SBATCH --ntasks-per-node=4     # number of tasks
 #SBATCH --cpus-per-task=2       # number of CPU cores per task
 #SBATCH --gres=gpu:4            # number of GPUs to use
-#SBATCH --mem=8G     	    	# memory per node (0 = use all of it)
+#SBATCH --mem=12G     	    	# memory per node (0 = use all of it)
 #SBATCH --time=00:45:00         # time (DD-HH:MM)
 #SBATCH --account=def-adcockb
 
