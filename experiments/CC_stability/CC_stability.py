@@ -64,7 +64,7 @@ pga_num_iters = 500      # gradient ascent iterations
 pga_lr = 1.0             # gradient ascent step size
 eta_pert = args.eta_pert / math.sqrt(2) # perturbation noise level 
 # needs to be scaled by math.sqrt(2) since the perturbation noise level 
-# 'stab_eta' refers to the noise level of e1, the first block of the
+# 'eta_pert' refers to the noise level of e1, the first block of the
 # noise vector e (we assume e1 == e2)
 
 # inferred parameters
@@ -124,7 +124,7 @@ X_rec = np.reshape(X_rec_t.numpy(),(N,N))
 ### compute worst-case perturbation
 
 e_pert_t = n_st.adv_perturbation(
-    X_vec_t, B, R, c_B=c_B, eta=stab_eta, 
+    X_vec_t, B, R, c_B=c_B, eta=eta_pert, 
     lr=pga_lr, num_iters=pga_num_iters, device=device_g)
 
 p_pert_t = B(e_pert_t,0)/c_B
