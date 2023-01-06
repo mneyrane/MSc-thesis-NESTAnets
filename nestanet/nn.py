@@ -19,7 +19,7 @@ def nesta_stacked(y1, y2, z0, opB, opW, c_B, L_W, num_iters, eta, mu, eval_fns=N
     d_noise = 2*eta*eta-torch.real(torch.vdot(y1-y2,y1-y2))
     # ------------------------------------------------
 
-    for n in range(0,num_iters+1):
+    for n in range(num_iters):
         # -----------
         # compute x_n
         # -----------

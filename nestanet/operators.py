@@ -65,7 +65,7 @@ def discrete_gradient_2d(x,mode,N1,N2):
         
         return y.reshape(-1)
 
-def fourier_2d(x, mode, N, mask, use_gpu=False):
+def fourier_2d(x, mode, N, mask, device):
     """ 2-D discrete Fourier transform 
 
     Normalized so that the forward and inverse mappings are unitary.
@@ -83,8 +83,7 @@ def fourier_2d(x, mode, N, mask, use_gpu=False):
     
     else: # adjoint
         z = torch.zeros(N*N,dtype=x.dtype)
-        if use_gpu:
-            z = z.cuda()
+        z = z.to(device)
         
         mask = mask.reshape(-1)
 

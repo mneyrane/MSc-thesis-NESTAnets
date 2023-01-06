@@ -6,7 +6,7 @@ Numerical experiments for my master's thesis, showcasing unrolled NESTA (NESTAne
 
 The experiments are written in [Python](https://www.python.org/downloads/) and can be run on any Linux distribution, provided the right Python version is packaged.
 
-To run the experiments without issues, these were run with Python 3.9 and using
+To run the experiments without issues, these were run with Python 3.10 and using
 
 [Consider putting together a "requirements.txt" file here and AS-NESTA-net]: #
 

@@ -6,7 +6,7 @@ setup(
     description='Unrolled NESTA for Fourier imaging via TV minimization',
     url='https://github.com/mneyrane/MSc-thesis-NESTAnets',
     license='MIT',
-    python_requires='>=3.9',
+    python_requires='>=3.10',
     install_requires=['torch', 'numpy', 'Pillow', 'scipy', 'matplotlib', 'seaborn'],
     packages=find_packages(),
 )

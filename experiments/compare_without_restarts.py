@@ -59,7 +59,7 @@ var_hist = n_sp.optimal_hist_2d(N)
 var_probs = n_sp.bernoulli_sampling_probs_2d(var_hist,N,m/2)
 var_mask = n_sp.generate_sampling_mask_from_probs(var_probs)
 
-mask, u1_mask, u2_mask, perm1, perm2 = n_sp.stacked_scheme_2d(uni_mask, var_mask, N, N)
+mask, _, _, _, _ = n_sp.stacked_scheme_2d(uni_mask, var_mask, N, N)
 
 m_exact = np.sum(mask)
 m_uni_exact = np.sum(uni_mask)
@@ -77,7 +77,7 @@ print('Effective sample rate:', m_exact/(N*N))
 
 ### generate functions for measurement and weight operators
 
-B = lambda x, mode: n_op.fourier_2d(x,mode,N,mask_t,use_gpu=True)*(N/math.sqrt(m))
+B = lambda x, mode: n_op.fourier_2d(x,mode,N,mask_t,device_g)*(N/math.sqrt(m))
 W = lambda x, mode: n_op.discrete_gradient_2d(x,mode,N,N)
 L_W = 2*math.sqrt(2)
 c_B = N*N/m
@@ -106,10 +106,10 @@ y2 = B(X_vec_t,1) + e2
 norm_fro_X = np.linalg.norm(X,'fro')
 print('Frobenius norm of X:', norm_fro_X)
 
-inner_iters = math.ceil(math.sqrt(2)/(r*N*delta))-1
-total_iters = outer_iters*(inner_iters+1)-1
-print('Inner iterations:', inner_iters+1)
-print('Total iterations:', total_iters+1)
+inner_iters = math.ceil(math.sqrt(2)/(r*N*delta))
+total_iters = outer_iters*inner_iters
+print('Inner iterations:', inner_iters)
+print('Total iterations:', total_iters)
 
 z0 = torch.zeros(N*N,dtype=X_vec_t.dtype)
 z0 = z0.to(device_g)

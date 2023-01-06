@@ -1,0 +1,6 @@
+Image size (number of pixels): (512, 512)
+Number of uniform measurements: 32995
+Number of variable measurements: 32732
+Number of uniquely sampled frequencies: 61591
+Target sample rate: 0.25
+Effective sample rate: 0.23495101928710938

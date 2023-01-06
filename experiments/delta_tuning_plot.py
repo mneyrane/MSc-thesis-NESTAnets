@@ -8,9 +8,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-script_path = Path(__file__)
-results_dir = script_path.parent / 'results'
-plots_dir = script_path.parent / 'plots'
+demos_path = Path(__file__).parent
+results_dir = demos_path / 'results'
+plots_dir = demos_path / 'plots'
 plots_dir.mkdir(exist_ok=True)
 
 ### load results
@@ -18,7 +18,7 @@ plots_dir.mkdir(exist_ok=True)
 with np.load(results_dir / 'delta_tuning-results.npz') as data:
     results = dict(data)
 
-sns.set(context='paper', style='whitegrid', font='sans', font_scale=1.5, rc={'text.usetex' : True})
+sns.set(context='paper', style='ticks', font='Arimo', font_scale=1.5)
 
 cmap = mpl.colormaps['rainbow']
 colors = cmap(np.linspace(0,1,num=len(results)))
@@ -39,4 +39,4 @@ plt.xticks([0,10,20,30,40,50])
 #plt.xlabel('Restart')
 #plt.ylabel('$\\lVert x_k^\\star - x \\rVert$')
 plt.legend(loc='center right')
-plt.savefig(plots_dir / 'delta_tuning-plot.pdf', bbox_inches='tight', dpi=300)
+plt.savefig(plots_dir / 'delta_tuning-plot.pdf', dpi=300)
