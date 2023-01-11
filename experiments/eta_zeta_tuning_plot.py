@@ -1,6 +1,3 @@
-"""
-Generate plots from compare_without_restarts.py results.
-"""
 import math
 import numpy as np
 import seaborn as sns

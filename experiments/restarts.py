@@ -23,7 +23,7 @@ device_g = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 ### load image
 
-with Image.open(demos_path / "images/GPLU_phantom_512.png") as im:
+with Image.open(demos_path / "images/GLPU_phantom_512.png") as im:
     X = np.asarray(im).astype(float) / 255
 
 

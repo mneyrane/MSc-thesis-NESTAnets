@@ -1,6 +1,3 @@
-"""
-Generate plots from test_stability.py results.
-"""
 import math
 import numpy as np
 import seaborn as sns
