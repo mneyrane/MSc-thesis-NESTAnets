@@ -32,11 +32,11 @@ with Image.open(demos_path / "images/GLPU_phantom_512.png") as im:
 
 # fixed parameters
 eta = 1e-5          # noise level
-sample_rate = 0.125 # sample rate
+sample_rate = 0.25  # sample rate
 outer_iters = 50    # num of restarts + 1
 r = math.exp(-1)    # decay factor
 zeta = 1e-9         # CS error parameter
-delta = np.logspace(-3.76,-3.4,num=10)  # rNSP parameter
+delta = np.logspace(-3.56,-3.2,num=10)  # rNSP parameter
 
 # inferred parameters (mu and inner_iters are defined later)
 eps0 = np.linalg.norm(X,'fro')

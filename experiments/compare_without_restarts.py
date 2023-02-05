@@ -33,7 +33,7 @@ with Image.open(demos_path / "images/GLPU_phantom_512.png") as im:
 
 # fixed parameters
 eta = 1e-7          # noise level
-sample_rate = 0.15  # sample rate
+sample_rate = 0.125 # sample rate
 outer_iters = 200   # num of restarts + 1
 r = math.exp(-1)    # decay factor 
 zeta = 1e-9         # CS error parameter

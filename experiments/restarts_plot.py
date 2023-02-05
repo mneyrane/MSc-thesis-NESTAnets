@@ -18,7 +18,7 @@ with np.load(results_dir / 'restarts-results.npz') as data:
 sns.set(context='paper', style='ticks', font='Arimo', font_scale=1.5)
 
 cmap = mpl.colormaps['rainbow']
-colors = cmap(np.linspace(0,1,num=len(results)))
+colors = cmap(np.linspace(1,0,num=len(results)))
 
 for i, noise_level in enumerate(results):
     end_idx = len(results[noise_level])+1
@@ -26,7 +26,7 @@ for i, noise_level in enumerate(results):
         range(1,end_idx), 
         results[noise_level], 
         label='$\\eta = 10^{%d}$' % math.log10(float(noise_level)),
-        color=colors[len(results)-i-1],
+        color=colors[i],
         marker='o',
         markersize=4.5,
         linewidth=2.5)
