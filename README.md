@@ -1,6 +1,6 @@
 # MSc-thesis-NESTAnets
 
-Numerical experiments for my master's thesis, showcasing unrolled NESTA (NESTAnets[^1]) to recover images from Fourier measurements via TV minimization.
+Numerical experiments for my [master's thesis](https://summit.sfu.ca/item/36038), showcasing unrolled NESTA (NESTAnets) to recover images from Fourier measurements via TV minimization.
 
 ## Requirements
 
